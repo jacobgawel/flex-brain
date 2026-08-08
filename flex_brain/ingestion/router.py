@@ -10,10 +10,10 @@ from flex_brain.ingestion.service import (
     UnsupportedMimetypeError,
 )
 
-router = APIRouter(tags=["ingestion"])
+router = APIRouter(prefix="/ingestion", tags=["ingestion"])
 
 
-@router.post("/ingestion")
+@router.post("")
 async def ingest(
     request: Annotated[IngestionRequest, Form()], ingestion_service: IngestionServiceDep
 ) -> IngestionResponse:

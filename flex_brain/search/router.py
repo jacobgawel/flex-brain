@@ -4,10 +4,10 @@ from flex_brain.constants import DEFAULT_EMBEDDING_MODEL
 from flex_brain.search.dependencies import SearchServiceDep
 from flex_brain.search.models import SearchHit, SearchRequest, SearchResponse
 
-router = APIRouter(tags=["search"])
+router = APIRouter(prefix="/search", tags=["search"])
 
 
-@router.post("/search")
+@router.post("")
 async def search(
     request: SearchRequest, search_service: SearchServiceDep
 ) -> SearchResponse:
