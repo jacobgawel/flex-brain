@@ -1,0 +1,48 @@
+info:
+  name: Ingest File
+  type: http
+  seq: 1
+  tags:
+    - ingestion
+
+http:
+  method: POST
+  url: http://localhost:8000/ingestion
+  body:
+    type: multipart-form
+    data:
+      - name: file
+        type: file
+        value:
+          - C:\Users\jakeg\Pictures\GvwPXvOWcAA-qE4.jpg
+        contentType: image/jpeg
+
+runtime:
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |-
+  # POST /ingestion
+
+  Uploads a file, detects its mimetype, embeds the content, and stores the
+  vectors in Qdrant. Returns the `document_id` (sha256 of the file bytes),
+  the embedding `model`, `filename`, detected `mimetype`, and the number of
+  `chunks` stored. Re-uploading the same file overwrites its existing
+  points instead of duplicating them.
+
+  Accepted types: any `text/*` mimetype, plus `application/json`,
+  `application/xml`, `application/x-yaml`, and the multimodal types
+  `image/png`, `image/jpeg`, `audio/mpeg`, `audio/wav`, and
+  `application/pdf` (max 6 pages). Anything else returns
+  `415 Unsupported Media Type`.
+
+  Use the returned `document_id` with POST /search (`document_id` filter)
+  to search within the uploaded document.

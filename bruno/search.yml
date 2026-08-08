@@ -1,0 +1,47 @@
+info:
+  name: Search
+  type: http
+  seq: 2
+  tags:
+    - search
+
+http:
+  method: POST
+  url: http://localhost:8000/search
+  body:
+    type: json
+    data: |
+      {
+        "query": "cartoon",
+        "limit": 10
+      }
+
+runtime:
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |-
+  # POST /search
+
+  Semantic search over ingested documents. Embeds the query with the same
+  model used at ingestion time and returns the nearest chunks.
+
+  Request body:
+  - `query` (required) — natural-language search text
+  - `limit` — max hits to return (default 10, 1–100)
+  - `model` — embedding model override; must match the model the documents
+    were ingested with, or results are meaningless
+  - `document_id` — restrict the search to one ingested document (the id
+    returned by POST /ingestion)
+
+  Each hit contains the chunk's point `id`, similarity `score` (cosine,
+  higher is better), and its `document_id`, `filename`, `mimetype`,
+  and `chunk_index`.

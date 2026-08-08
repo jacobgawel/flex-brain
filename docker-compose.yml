@@ -1,0 +1,27 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: flex-brain-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333" # REST API
+      - "6334:6334" # gRPC API
+    volumes:
+      - qdrant_storage:/qdrant/storage
+
+  postgres:
+    image: postgres:17
+    container_name: flex-brain-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: flex
+      POSTGRES_PASSWORD: flex
+      POSTGRES_DB: flex_brain
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  qdrant_storage:
+  postgres_data:
