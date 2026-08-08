@@ -9,6 +9,7 @@ class DocumentPayload(BaseModel):
     mimetype: str
     chunk_index: int
     model: str
+    space_id: str | None = None
 
 
 class VectorRecord(BaseModel):

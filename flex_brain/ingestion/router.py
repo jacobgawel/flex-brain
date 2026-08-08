@@ -31,6 +31,7 @@ async def ingest(
             filename=file.filename,
             declared_type=file.content_type,
             model=model,
+            space_id=request.space_id,
         )
     except UnsupportedMimetypeError as exc:
         raise HTTPException(
@@ -51,4 +52,5 @@ async def ingest(
         filename=file.filename,
         mimetype=result.mimetype,
         chunks=result.chunks,
+        space_id=result.space_id,
     )

@@ -5,6 +5,7 @@ from pydantic import BaseModel
 class IngestionRequest(BaseModel):
     file: UploadFile
     model: str | None = None
+    space_id: str | None = None
 
 
 class IngestionResponse(BaseModel):
@@ -13,3 +14,4 @@ class IngestionResponse(BaseModel):
     filename: str | None
     mimetype: str
     chunks: int
+    space_id: str | None

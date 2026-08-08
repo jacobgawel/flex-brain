@@ -7,6 +7,10 @@ A FastAPI service that ingests documents, embeds them with Google's `gemini-embe
 1. **Ingest** — upload a file; its mimetype is detected with [Magika](https://github.com/google/magika), the content is embedded via the Gemini API, and the vectors are upserted into Qdrant. Document identity is content-addressed (SHA-256 of the bytes), so re-ingesting the same file overwrites its existing points instead of duplicating them.
 2. **Search** — send a text query; it is embedded with the same model and matched against stored vectors, optionally scoped to a single document.
 
+### Spaces
+
+Documents can be ingested into a **space** (an arbitrary `space_id` string), which partitions the collection. Searches with a `space_id` only see that space; searches without one only see documents ingested without a space (the general store) — spaced documents never leak into unscoped searches. Point identity is scoped per space, so the same file can live in a space and the general store without overwriting each other.
+
 ### Supported file types
 
 - Text: any `text/*`, plus JSON, XML, and YAML
@@ -26,7 +30,7 @@ Per-request Gemini model limits apply (6 images, 180s audio, 8192 tokens total).
 ## Getting started
 
 ```sh
-# 1. Start Qdrant (and Postgres) locally
+# 1. Start Qdrant locally
 docker compose up -d
 
 # 2. Configure environment
@@ -64,12 +68,13 @@ Multipart form upload.
 | --- | --- | --- |
 | `file` | file | The document to ingest |
 | `model` | string (optional) | Embedding model, defaults to `gemini-embedding-2` |
+| `space_id` | string (optional) | Space to ingest into; omit for the general store |
 
 ```sh
 curl -X POST http://127.0.0.1:8000/ingestion -F "file=@document.pdf"
 ```
 
-Returns the `document_id`, detected mimetype, and number of chunks stored. Errors: `415` for unsupported mimetypes, `400` for invalid PDFs, `413` for PDFs over the page limit.
+Returns the `document_id`, detected mimetype, number of chunks stored, and the `space_id` (if any). Errors: `415` for unsupported mimetypes, `400` for invalid PDFs, `413` for PDFs over the page limit.
 
 ### `POST /search`
 
@@ -81,6 +86,7 @@ JSON body.
 | `limit` | int (optional) | Max hits, 1–100, defaults to 10 |
 | `model` | string (optional) | Embedding model, must match the one used at ingestion |
 | `document_id` | string (optional) | Restrict the search to one ingested document |
+| `space_id` | string (optional) | Search only this space; when omitted, only the general store is searched |
 
 ```sh
 curl -X POST http://127.0.0.1:8000/search \
@@ -88,7 +94,7 @@ curl -X POST http://127.0.0.1:8000/search \
   -d '{"query": "what is the refund policy?", "limit": 5}'
 ```
 
-Returns scored hits with the source document's id, filename, mimetype, and chunk index.
+Returns scored hits with the source document's id, filename, mimetype, chunk index, and space.
 
 A [Bruno](https://www.usebruno.com/) collection with ready-made requests is available in [bruno/](bruno/).
 

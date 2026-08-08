@@ -9,19 +9,6 @@ services:
     volumes:
       - qdrant_storage:/qdrant/storage
 
-  postgres:
-    image: postgres:17
-    container_name: flex-brain-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: flex
-      POSTGRES_PASSWORD: flex
-      POSTGRES_DB: flex_brain
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
 volumes:
   qdrant_storage:
   postgres_data:

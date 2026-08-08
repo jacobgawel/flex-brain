@@ -10,6 +10,13 @@ class SearchRequest(BaseModel):
     document_id: str | None = Field(
         default=None, description="restrict the search to one ingested document"
     )
+    space_id: str | None = Field(
+        default=None,
+        description=(
+            "search only this space; when omitted, only documents without "
+            "a space (the general store) are searched"
+        ),
+    )
 
 
 class SearchHit(BaseModel):
@@ -19,6 +26,7 @@ class SearchHit(BaseModel):
     filename: str | None
     mimetype: str
     chunk_index: int
+    space_id: str | None
 
 
 class SearchResponse(BaseModel):

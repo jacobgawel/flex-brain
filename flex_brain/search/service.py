@@ -19,6 +19,7 @@ class SearchService:
         limit: int = 10,
         model: str | None = None,
         document_id: str | None = None,
+        space_id: str | None = None,
     ) -> list[SearchResult]:
         if model is None:
             model = DEFAULT_EMBEDDING_MODEL
@@ -26,5 +27,5 @@ class SearchService:
         vectors = await self.embedding_service.embed(query, model)
 
         return await self.vector_store.search(
-            vectors[0], limit=limit, document_id=document_id
+            vectors[0], limit=limit, document_id=document_id, space_id=space_id
         )

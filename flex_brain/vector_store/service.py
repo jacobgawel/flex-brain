@@ -39,6 +39,12 @@ class VectorStoreService:
             field_schema=models.PayloadSchemaType.KEYWORD,
         )
 
+        await self.qdrant_client.create_payload_index(
+            collection_name=self.collection_name,
+            field_name="space_id",
+            field_schema=models.PayloadSchemaType.KEYWORD,
+        )
+
     async def upsert(self, records: list[VectorRecord]) -> None:
         """insert points, overwriting any existing point with the same id"""
         if not records:
@@ -61,17 +67,20 @@ class VectorStoreService:
         vector: list[float],
         limit: int = 10,
         document_id: str | None = None,
+        space_id: str | None = None,
     ) -> list[SearchResult]:
-        """nearest-neighbour search, optionally restricted to one document"""
-        query_filter = (
-            self._document_filter(document_id) if document_id is not None else None
-        )
+        """Nearest-neighbour search, optionally restricted to one document.
+
+        Spaces partition the collection: with a space_id only that space is
+        searched; without one only the general store (points with no space)
+        is searched. Spaced points never appear in unscoped searches.
+        """
 
         response = await self.qdrant_client.query_points(
             collection_name=self.collection_name,
             query=vector,
             limit=limit,
-            query_filter=query_filter,
+            query_filter=self._search_filter(document_id, space_id),
             with_payload=True,
         )
 
@@ -83,6 +92,34 @@ class VectorStoreService:
             )
             for point in response.points
         ]
+
+    @staticmethod
+    def _search_filter(document_id: str | None, space_id: str | None) -> models.Filter:
+        conditions: list[models.Condition] = []
+
+        if document_id is not None:
+            conditions.append(
+                models.FieldCondition(
+                    key="document_id",
+                    match=models.MatchValue(value=document_id),
+                )
+            )
+
+        if space_id is not None:
+            conditions.append(
+                models.FieldCondition(
+                    key="space_id",
+                    match=models.MatchValue(value=space_id),
+                )
+            )
+        else:
+            # IsEmpty matches points where space_id is missing or null,
+            # keeping spaced points out of general-store searches
+            conditions.append(
+                models.IsEmptyCondition(is_empty=models.PayloadField(key="space_id"))
+            )
+
+        return models.Filter(must=conditions)
 
     @staticmethod
     def _document_filter(document_id: str) -> models.Filter:

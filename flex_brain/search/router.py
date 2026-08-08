@@ -18,6 +18,7 @@ async def search(
         limit=request.limit,
         model=model,
         document_id=request.document_id,
+        space_id=request.space_id,
     )
 
     return SearchResponse(
@@ -30,6 +31,7 @@ async def search(
                 filename=result.payload.filename,
                 mimetype=result.payload.mimetype,
                 chunk_index=result.payload.chunk_index,
+                space_id=result.payload.space_id,
             )
             for result in results
         ],

@@ -37,6 +37,7 @@ class IngestionResult:
     document_id: str
     mimetype: str
     chunks: int
+    space_id: str | None = None
 
 
 class IngestionService:
@@ -54,6 +55,7 @@ class IngestionService:
         filename: str | None = None,
         declared_type: str | None = None,
         model: str | None = None,
+        space_id: str | None = None,
     ) -> IngestionResult:
         if model is None:
             model = DEFAULT_EMBEDDING_MODEL
@@ -68,9 +70,13 @@ class IngestionService:
         # overwrites existing points instead of duplicating them
         document_id = hashlib.sha256(content).hexdigest()
 
+        # point identity is scoped by space so the same content can exist in
+        # a space and the general store without overwriting each other
+        identity = document_id if space_id is None else f"{space_id}/{document_id}"
+
         records = [
             VectorRecord(
-                id=uuid.uuid5(POINT_NAMESPACE, f"{document_id}:{index}"),
+                id=uuid.uuid5(POINT_NAMESPACE, f"{identity}:{index}"),
                 vector=vector,
                 payload=DocumentPayload(
                     document_id=document_id,
@@ -78,6 +84,7 @@ class IngestionService:
                     mimetype=mimetype,
                     chunk_index=index,
                     model=model,
+                    space_id=space_id,
                 ),
             )
             for index, vector in enumerate(embeddings)
@@ -86,7 +93,10 @@ class IngestionService:
         await self.vector_store.upsert(records)
 
         return IngestionResult(
-            document_id=document_id, mimetype=mimetype, chunks=len(records)
+            document_id=document_id,
+            mimetype=mimetype,
+            chunks=len(records),
+            space_id=space_id,
         )
 
     def _to_embeddable(self, content: bytes, mimetype: str) -> str | types.Part:
