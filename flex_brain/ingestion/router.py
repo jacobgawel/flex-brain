@@ -3,10 +3,11 @@ from typing import Annotated
 from fastapi import APIRouter, Form, HTTPException, status
 
 from flex_brain.ingestion.dependencies import IngestionServiceDep
-from flex_brain.ingestion.pdf import InvalidPdfError, PdfTooLongError
 from flex_brain.ingestion.models import IngestionRequest, IngestionResponse
+from flex_brain.ingestion.pdf import InvalidPdfError, PdfTooLongError
 from flex_brain.ingestion.service import (
     DEFAULT_EMBEDDING_MODEL,
+    EmptyContentError,
     UnsupportedMimetypeError,
 )
 
@@ -36,6 +37,10 @@ async def ingest(
     except UnsupportedMimetypeError as exc:
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(exc)
+        ) from exc
+    except EmptyContentError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
         ) from exc
     except InvalidPdfError as exc:
         raise HTTPException(

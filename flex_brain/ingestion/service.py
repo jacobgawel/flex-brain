@@ -32,6 +32,11 @@ class UnsupportedMimetypeError(Exception):
         super().__init__(f"unsupported mimetype: {mimetype}")
 
 
+class EmptyContentError(Exception):
+    def __init__(self):
+        super().__init__("file has no embeddable content")
+
+
 @dataclass
 class IngestionResult:
     document_id: str
@@ -59,6 +64,9 @@ class IngestionService:
     ) -> IngestionResult:
         if model is None:
             model = DEFAULT_EMBEDDING_MODEL
+
+        if not content:
+            raise EmptyContentError()
 
         mimetype = detect_mimetype(content, filename, declared_type)
 
@@ -101,7 +109,12 @@ class IngestionService:
 
     def _to_embeddable(self, content: bytes, mimetype: str) -> str | types.Part:
         if mimetype.startswith("text/") or mimetype in TEXT_MIMETYPES:
-            return content.decode("utf-8", errors="replace")
+            text = content.decode("utf-8", errors="replace")
+            # Gemini rejects empty parts with an opaque 400; whitespace-only
+            # text has nothing to embed either
+            if not text.strip():
+                raise EmptyContentError()
+            return text
 
         if mimetype in MULTIMODAL_MIMETYPES:
             if mimetype == "application/pdf":

@@ -12,7 +12,7 @@ http:
     type: json
     data: |
       {
-        "query": "cartoon",
+        "query": "kot",
         "limit": 10
       }
 

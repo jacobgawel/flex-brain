@@ -12,10 +12,8 @@ http:
     type: multipart-form
     data:
       - name: file
-        type: file
-        value:
-          - C:\Users\jakeg\Pictures\GvwPXvOWcAA-qE4.jpg
-        contentType: image/jpeg
+        type: text
+        value: ""
 
 runtime:
   assertions:
