@@ -1,0 +1,74 @@
+info:
+  name: Index Exercises
+  type: http
+  seq: 3
+  tags:
+    - exercises
+
+http:
+  method: PUT
+  url: http://localhost:8000/exercises
+  body:
+    type: json
+    data: |
+      {
+        "muscles": {
+          "rectus_abdominis": {"name_en": "Rectus Abdominis"}
+        },
+        "equipment": {
+          "ab_wheel": {"name_en": "Ab Wheel"}
+        },
+        "exercises": [
+          {
+            "id": "ab-wheel-rollout",
+            "name_en": "Ab Wheel Rollout",
+            "description_en": "A core exercise rolling a wheel forward and back.",
+            "category": "strength",
+            "force_type": "pull",
+            "mechanic": "compound",
+            "difficulty": "intermediate",
+            "equipment": "ab_wheel",
+            "body_part": "core",
+            "is_bodyweight": false,
+            "goals": ["strength"],
+            "synonyms": ["ab wheel rollout"],
+            "primary_muscles": ["rectus_abdominis"]
+          }
+        ]
+      }
+
+runtime:
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |-
+  # PUT /exercises
+
+  Indexes an exercise catalog for semantic search. The request body is the
+  raw RepDB bundle `exercises.json`, posted verbatim — the miniature inline
+  bundle here is just a smoke test. The real workflow is:
+
+      curl -X PUT http://127.0.0.1:8000/exercises \
+        -H "Content-Type: application/json" \
+        --data-binary @exercises.json
+
+  Each non-placeholder exercise is rendered to a text (name + synonyms,
+  attribute sentences using display names, description), embedded with the
+  RETRIEVAL_DOCUMENT task type, and upserted into the dedicated exercises
+  collection with a structured payload (slug, category, equipment,
+  difficulty, body_part, muscles, goals, booleans).
+
+  Idempotent: point ids derive from the slug, so re-PUTting a bundle
+  overwrites each exercise in place, and points whose slug is missing from
+  the bundle are deleted afterwards (`deleted` in the response).
+
+  Errors: an exercise referencing a muscle/equipment slug absent from the
+  bundle's lookup dicts returns 400 before any embedding happens.

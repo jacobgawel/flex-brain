@@ -41,6 +41,10 @@ class Settings(BaseSettings):
         default="documents",
         description="Qdrant collection that stores document embeddings",
     )
+    qdrant_exercise_collection: str = Field(
+        default="exercises",
+        description="Qdrant collection that stores exercise embeddings",
+    )
     qdrant_api_key: SecretStr = Field(
         default=SecretStr(""),
         description=(

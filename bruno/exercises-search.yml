@@ -1,0 +1,53 @@
+info:
+  name: Search Exercises
+  type: http
+  seq: 4
+  tags:
+    - exercises
+
+http:
+  method: POST
+  url: http://localhost:8000/exercises/search
+  body:
+    type: json
+    data: |
+      {
+        "query": "cos na ramiona z kablami",
+        "limit": 5
+      }
+
+runtime:
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |-
+  # POST /exercises/search
+
+  Semantic search over the indexed exercise catalog. The query is embedded
+  with the RETRIEVAL_QUERY task type (the counterpart of the
+  RETRIEVAL_DOCUMENT embeddings) and matched against the exercises
+  collection, optionally restricted by payload filters.
+
+  Request body:
+  - `query` (required) — natural-language search text
+  - `limit` — max hits (default 10, 1-100)
+  - `model` — embedding model override; must match the indexing model
+  - Filters (all optional, ANDed together; values are bundle slugs):
+    - `category` — e.g. "strength", "stretching"
+    - `equipment` — e.g. "barbell"; exercises with no equipment have null
+    - `difficulty` — "beginner" | "intermediate" | "advanced"
+    - `body_part` — e.g. "core", "upper_arms"
+    - `muscle` — matches primary OR secondary muscles, e.g. "obliques"
+    - `goal` — e.g. "hypertrophy"
+    - `is_bodyweight`, `is_unilateral` — booleans
+
+  Each hit carries the exercise `slug` (resolve it against the flex-api
+  catalog for display data), similarity `score`, and the payload fields.

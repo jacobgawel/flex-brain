@@ -53,6 +53,7 @@ Settings are loaded from environment variables or `.env` (see [config.py](flex_b
 | `QDRANT_URL` | `http://localhost:6333` | Base URL of the Qdrant instance |
 | `QDRANT_COLLECTION` | `documents` | Collection that stores document embeddings |
 | `QDRANT_API_KEY` | empty | Only needed for Qdrant Cloud or auth-enabled instances |
+| `QDRANT_EXERCISE_COLLECTION` | `exercises` | Collection that stores exercise embeddings |
 
 ## API
 
@@ -96,6 +97,44 @@ curl -X POST http://127.0.0.1:8000/search \
 
 Returns scored hits with the source document's id, filename, mimetype, chunk index, and space.
 
+### `PUT /exercises`
+
+JSON body: a raw RepDB bundle `exercises.json`, posted verbatim. Each non-placeholder exercise is rendered to a search text (name + synonyms first, then attribute sentences using display names, then the description), embedded with the `RETRIEVAL_DOCUMENT` task type, and upserted into the dedicated exercises collection — separate from the document store — with a structured payload for filtering. Idempotent: point ids derive from the exercise slug, so re-indexing overwrites in place, and exercises missing from the bundle are deleted afterwards.
+
+```sh
+curl -X PUT http://127.0.0.1:8000/exercises \
+  -H "Content-Type: application/json" \
+  --data-binary @exercises.json
+```
+
+Returns the embedding `model` and counts: `exercises_indexed`, `placeholders_skipped`, `deleted`. Errors: `400` when an exercise references a muscle or equipment slug missing from the bundle's lookup dicts.
+
+### `POST /exercises/search`
+
+JSON body. The query is embedded with the `RETRIEVAL_QUERY` task type — the counterpart of the document embeddings — and matched against the exercises collection.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `query` | string | Search text |
+| `limit` | int (optional) | Max hits, 1–100, defaults to 10 |
+| `model` | string (optional) | Embedding model, must match the one used at indexing |
+| `category` | string (optional) | Filter, e.g. `strength` |
+| `equipment` | string (optional) | Filter by equipment slug, e.g. `barbell` |
+| `difficulty` | string (optional) | Filter: `beginner` / `intermediate` / `advanced` |
+| `body_part` | string (optional) | Filter, e.g. `core`, `upper_arms` |
+| `muscle` | string (optional) | Filter; matches primary **or** secondary muscles |
+| `goal` | string (optional) | Filter, e.g. `hypertrophy` |
+| `is_bodyweight` | bool (optional) | Filter |
+| `is_unilateral` | bool (optional) | Filter |
+
+```sh
+curl -X POST http://127.0.0.1:8000/exercises/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "easier alternative to a lunge", "limit": 5, "is_bodyweight": true}'
+```
+
+Returns scored hits carrying each exercise's `slug` (resolve against the flex-api catalog for display data) and its payload fields.
+
 A [Bruno](https://www.usebruno.com/) collection with ready-made requests is available in [bruno/](bruno/).
 
 ## Project structure
@@ -107,6 +146,7 @@ flex_brain/
 ├── clients/          # Gemini and Qdrant client lifecycle
 ├── constants/        # embedding model and vector store constants
 ├── embedding/        # embedding generation via Gemini
+├── exercises/        # PUT /exercises, POST /exercises/search — exercise catalog
 ├── health/           # GET /health
 ├── ingestion/        # POST /ingestion — mimetype detection, PDF validation
 ├── search/           # POST /search — semantic search over stored vectors
