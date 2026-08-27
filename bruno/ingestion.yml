@@ -7,13 +7,15 @@ info:
 
 http:
   method: POST
-  url: http://localhost:8000/ingestion
+  url: "{{baseUrl}}/ingestion"
   body:
     type: multipart-form
     data:
       - name: file
-        type: text
-        value: ""
+        type: file
+        value:
+          - E:\Projects\Flex\repdb-bundle-standard\exercises.json
+        contentType: application/json; charset=utf-8
 
 runtime:
   assertions:
@@ -26,6 +28,7 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true
 
 docs: |-
   # POST /ingestion

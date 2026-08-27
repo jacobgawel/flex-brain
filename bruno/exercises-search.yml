@@ -12,7 +12,7 @@ http:
     type: json
     data: |
       {
-        "query": "cos na ramiona z kablami",
+        "query": "something for neck",
         "limit": 5
       }
 

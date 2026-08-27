@@ -23,6 +23,16 @@ class Settings(BaseSettings):
         description="Enable debug behaviour (verbose logging, detailed errors)",
     )
 
+    host: str = Field(
+        default="127.0.0.1",
+        description=(
+            "Host configuration, for local development it should be configured"
+            "to localhost (127.0.0.1) to avoid resolving delays."
+        ),
+    )
+
+    port: int = Field(default=8000, description="Port configuration")
+
     # GEMINI CONFIGURATION
     gemini_api_key: SecretStr = Field(
         ...,
