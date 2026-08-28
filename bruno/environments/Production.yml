@@ -1,0 +1,5 @@
+name: Production
+variables:
+  - name: baseUrl
+    value: https://flex-brain-svc-production.up.railway.app
+    description: ""

@@ -7,35 +7,13 @@ info:
 
 http:
   method: PUT
-  url: http://localhost:8000/exercises
+  url: "{{baseUrl}}/exercises"
   body:
-    type: json
-    data: |
-      {
-        "muscles": {
-          "rectus_abdominis": {"name_en": "Rectus Abdominis"}
-        },
-        "equipment": {
-          "ab_wheel": {"name_en": "Ab Wheel"}
-        },
-        "exercises": [
-          {
-            "id": "ab-wheel-rollout",
-            "name_en": "Ab Wheel Rollout",
-            "description_en": "A core exercise rolling a wheel forward and back.",
-            "category": "strength",
-            "force_type": "pull",
-            "mechanic": "compound",
-            "difficulty": "intermediate",
-            "equipment": "ab_wheel",
-            "body_part": "core",
-            "is_bodyweight": false,
-            "goals": ["strength"],
-            "synonyms": ["ab wheel rollout"],
-            "primary_muscles": ["rectus_abdominis"]
-          }
-        ]
-      }
+    type: file
+    data:
+      - filePath: E:\Projects\Flex\repdb-bundle-standard\exercises.json
+        contentType: application/json; charset=utf-8
+        selected: true
 
 runtime:
   assertions:
@@ -48,6 +26,7 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true
 
 docs: |-
   # PUT /exercises
